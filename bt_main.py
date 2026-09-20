@@ -25,7 +25,16 @@ DATA_PATH = PROJECT_DIR / "data" / "btcusdt_5m.parquet"
 RESULTS_DIR = PROJECT_DIR / "results"
 
 # Minutes per bar, for the backtester's annualization lookup.
-INTERVAL_MINUTES = {"1m": 1, "5m": 5, "15m": 15, "1h": 60, "4h": 240, "1d": 1440}
+INTERVAL_MINUTES = {
+    "1m": 1,
+    "5m": 5,
+    "10m": 10,
+    "15m": 15,
+    "30m": 30,
+    "1h": 60,
+    "4h": 240,
+    "1d": 1440,
+}
 
 
 def create_strategy(

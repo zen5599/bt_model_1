@@ -1,48 +1,104 @@
-# bt-model-1
+# General-Purpose Strategy Backtesting Framework
 
-基于 Binance USD-M 永续合约 5 分钟 K 线的参数扫描回测，并用 Dash 展示结果。
-项目不依赖原工程中的数据库。
+**English** | [中文版](README.zh-CN.md)
 
-## 环境
+A configurable, multi-timeframe parameter-sweep backtesting framework with an interactive Dash results dashboard. It can be used with different instruments and is not tied to Bitcoin or a specific timeframe.
 
-安装 [uv](https://docs.astral.sh/uv/) 后，在本目录运行：
+## Requirements
+
+- Python 3.11 or later
+- [uv](https://docs.astral.sh/uv/)
+
+Install the locked dependencies from this directory:
 
 ```bash
 uv sync
 ```
 
-## 数据
+## Supported timeframes
 
-行情已经保存在 `data/btcusdt_5m.parquet`，范围是从 `2020-01-01 00:00:00 UTC`
-到数据生成时最后一根已收盘的 5 分钟 K 线。`bt_main.py` 会直接读取该文件；如果
-文件不存在，会提示将它放入 `data/` 目录。
+The backtesting engine supports the following timeframes and uses their corresponding annualization factors:
 
-Parquet 的主要字段为：
+| Timeframe | Minutes per bar | Included demo data |
+| --- | ---: | :---: |
+| 1m | 1 | No |
+| 5m | 5 | Yes |
+| 10m | 10 | No |
+| 15m | 15 | No |
+| 30m | 30 | No |
+| 1h | 60 | No |
+| 4h | 240 | No |
+| 1d | 1,440 | No |
 
-- `timestamp`（UTC）
-- `open`, `high`, `low`, `close`
-- `volume`, `quote_volume`
-- `number_of_trades`
-- `taker_buy_base_volume`, `taker_buy_quote_volume`
+Set `RESOLUTION` and `DATA_PATH` in `bt_main.py` when using another timeframe or dataset.
 
-## 运行回测
+## Demo dataset
+
+The bundled BTCUSDT dataset is provided **only as a runnable demonstration**. Bitcoin is not a requirement of the framework and can be replaced with another instrument that follows the same schema.
+
+The demo file is located at:
+
+```text
+data/btcusdt_5m.parquet
+```
+
+It contains BTCUSDT 5-minute candles beginning at `2020-01-01 00:00:00 UTC` and ending at the last completed candle when the dataset was generated. `bt_main.py` reads this file directly and reports a clear error if it is missing.
+
+Required and optional columns:
+
+- Required: `timestamp`, `open`, `high`, `low`, `close`, `volume`
+- Optional demo fields: `quote_volume`, `number_of_trades`, `taker_buy_base_volume`, `taker_buy_quote_volume`
+- Optional backtester field: `funding`
+
+## Running the backtest
 
 ```bash
 uv run python bt_main.py
 ```
 
-回测结束后：
+The program will:
 
-- 参数扫描结果保存到 `results/sweep_5m_*.parquet`
-- Dashboard 默认打开在 <http://127.0.0.1:8050>
+1. Load the bundled Parquet dataset.
+2. Calculate buy-and-hold metrics.
+3. Run the configured strategy parameter sweep in parallel.
+4. Save the results under `results/sweep_5m_*.parquet`.
+5. Start the Dash dashboard at <http://127.0.0.1:8050>.
 
-策略扫描范围在 `strategy_module.py` 的 `get_strategy_params()` 中设置；交易手续费
-默认是 `0.0005`，位于 `backtester_engine1.py` 的 `Backtester` 构造函数中。
+The full parameter sweep can take a significant amount of time because it evaluates many parameter combinations over the complete dataset.
 
-当前 Binance REST 数据只有 OHLCV，不包含资金费率，因此回测不会扣除 funding；
-`Backtester` 仅在输入数据存在 `funding` 字段时计算资金费率。
+## Configuration
 
-## 分享
+Strategy definitions and parameter ranges are located in `strategy_module.py`, particularly `get_strategy_params()`.
 
-分享时需要包含源码、`pyproject.toml`、`uv.lock` 和
-`data/btcusdt_5m.parquet`，不需要包含 `.venv/`。
+The default transaction cost is `0.0005` and is configured in the `Backtester` constructor in `backtester_engine1.py`.
+
+The bundled dataset does not contain funding rates, so funding is not deducted. The backtester automatically includes funding costs when a `funding` column is present.
+
+## Project structure
+
+```text
+bt_model_1/
+├── data/
+│   └── btcusdt_5m.parquet
+├── results/
+├── backtest_dashboard.py
+├── backtester_engine1.py
+├── bt_main.py
+├── data_composer.py
+├── strategy_module.py
+├── pyproject.toml
+├── uv.lock
+├── README.md
+└── README.zh-CN.md
+```
+
+## Sharing the project
+
+Include the following when sharing the project:
+
+- Source files
+- `pyproject.toml`
+- `uv.lock`
+- `data/btcusdt_5m.parquet`
+
+Do not include `.venv/`; the recipient can recreate it with `uv sync`.
