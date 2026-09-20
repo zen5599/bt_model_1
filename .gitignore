@@ -1,0 +1,14 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated backtest output
+results/*
+!results/.gitkeep
+
+# Keep the bundled market data, but ignore other files placed here.
+data/*
+!data/.gitkeep
+!data/btcusdt_5m.parquet
